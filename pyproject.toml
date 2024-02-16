@@ -10,6 +10,7 @@ python = "^3.11.5"
 fastapi = "^0.109.2"
 sqlalchemy = "^2.0.25"
 alembic = "^1.13.1"
+psycopg2 = "^2.9.9"
 
 
 [build-system]
