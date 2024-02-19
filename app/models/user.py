@@ -1,6 +1,6 @@
 from sqlalchemy import BigInteger, String, Column
 from sqlalchemy.orm import validates
-from pydantic import EmailStr, validator
+from pydantic import EmailStr
 
 from app.models.base import Base
 

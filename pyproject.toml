@@ -11,6 +11,10 @@ fastapi = "^0.109.2"
 sqlalchemy = "^2.0.25"
 alembic = "^1.13.1"
 psycopg2 = "^2.9.9"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+pydantic = {extras = ["email"], version = "^2.6.1"}
+email-validator = "^2.1.0.post1"
 
 
 [build-system]

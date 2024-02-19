@@ -1,10 +1,12 @@
-from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+from pydantic import BaseModel
 
 
 class UserBase(BaseModel):
     name: str
-    email: EmailStr
-    phone_number: str | None = None
+    email: str
+    phone_number: Optional[str] = None
     region: str = "RU"
     
 class UserCreate(UserBase):
