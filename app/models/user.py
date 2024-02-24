@@ -13,8 +13,3 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     phone_number = Column(String, nullable=True)
     region = Column(String(2), nullable=False, default="RU")
-
-    # Валидация email
-    @validates("email")
-    def validate_email(cls, key, email):
-        return EmailStr(email)

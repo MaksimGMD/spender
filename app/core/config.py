@@ -1,7 +1,8 @@
 import secrets
 from typing import Any, Dict, Optional, List, Union
 
-from pydantic import BaseSettings, PostgresDsn, AnyHttpUrl, validator
+from pydantic import PostgresDsn, AnyHttpUrl, validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
-    POSTGRES_PORT: str
+    POSTGRES_PORT: int
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
@@ -43,11 +44,11 @@ class Settings(BaseSettings):
             return v
         return PostgresDsn.build(
             scheme="postgresql",
-            user=values.get("POSTGRES_USER"),
+            username=values.get("POSTGRES_USER"),
             password=values.get("POSTGRES_PASSWORD"),
             host=values.get("POSTGRES_HOST"),
             port=values.get("POSTGRES_PORT"),
-            path=f"/{values.get('POSTGRES_DB') or ''}",
+            path=f"{values.get('POSTGRES_DB') or ''}",
         )
 
     class Config:

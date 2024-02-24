@@ -4,20 +4,20 @@ from pydantic import BaseModel
 
 
 class UserBase(BaseModel):
-    name: str
-    email: str
+    name: Optional[str] = None
+    email: Optional[str] = None
     phone_number: Optional[str] = None
-    region: str = "RU"
+    region: Optional[str] = "RU"
     
 class UserCreate(UserBase):
     password: str
     
 class UserUpdate(UserBase):
-    password: str
+    password: Optional[str] = None
 
 
-class User(UserBase):
+class UserSchema(UserBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

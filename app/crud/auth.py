@@ -1,9 +1,12 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlmodel import select
+from fastapi import Depends
+
 from app.models.user import User
 from app.core.security import verify_password
-from sqlmodel import select
+
 from app.api.deps import get_session
-from fastapi import Depends
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
@@ -15,9 +18,9 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
         email (str): Адрес электронной почты пользователя.
 
     Returns:
-        User | None: Возвращает экземпляр пользователя, если найден, в противном случае None.
+        User | None: Возвращает экземпляр пользователя если найден, в противном случае None.
     """
-    statement = select(User).where(User.email == email)
+    statement = select(User).where(func.lower(User.email) == func.lower(email))
     session_user = session.exec(statement).first()
     return session_user
 

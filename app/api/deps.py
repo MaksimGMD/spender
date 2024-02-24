@@ -10,9 +10,9 @@ from app.core import security
 from app.core.config import settings
 from app.db.database import engine
 from app.models import User
-from app.models.token import TokenPayload
+from app.schemas.token import TokenPayload
 
-reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="access-token")
+reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="auth/access-token")
 
 
 def get_session() -> Generator:
@@ -26,6 +26,19 @@ def get_session() -> Generator:
 def get_current_user(
     session: Session = Depends(get_session), token: str = Depends(reusable_oauth2)
 ) -> User:
+    """
+    Получает текущего пользователя на основе переданного токена аутентификации.
+
+    Args:
+        session (Session, optional): Экземпляр сессии базы данных. Получается через зависимость.
+        token (str, optional): Токен аутентификации пользователя. Получается через зависимость.
+
+    Returns:
+        User: Экземпляр пользователя, если аутентификация успешна.
+
+    Raises:
+        HTTPException: В случае неудачной аутентификации, возникает исключение с кодом HTTP 403 Forbidden или 404 Not Found.
+    """
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
