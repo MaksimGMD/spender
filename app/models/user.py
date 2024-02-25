@@ -19,3 +19,6 @@ class User(Base):
     goals = relationship(
         "Goal", back_populates="user", cascade="all,delete", uselist=True
     )
+    accounts = relationship(
+        "Account", back_populates="user", cascade="all,delete", uselist=True
+    )
