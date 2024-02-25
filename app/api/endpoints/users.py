@@ -122,4 +122,4 @@ def delete_user(
         )
 
     crud.user.remove(session, id=user_id)
-    return f"Пользователь {user.name} удалён"
+    return f"Пользователь: {user.name} удалён"

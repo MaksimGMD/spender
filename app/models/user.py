@@ -13,4 +13,9 @@ class User(Base):
     phone_number = Column(String, nullable=True)
     region = Column(String(2), nullable=False, default="RU")
 
-    categories = relationship("Category", back_populates="user", cascade="all,delete", uselist=True)
+    categories = relationship(
+        "Category", back_populates="user", cascade="all,delete", uselist=True
+    )
+    goals = relationship(
+        "Goal", back_populates="user", cascade="all,delete", uselist=True
+    )

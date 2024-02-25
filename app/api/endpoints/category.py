@@ -115,4 +115,4 @@ def delete_category(
         )
 
     crud.category.remove(session, id=category_id)
-    return f"Категория {category.name} удалена"
+    return f"Категория: {category.name} удалена"
