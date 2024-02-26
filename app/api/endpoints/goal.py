@@ -7,9 +7,36 @@ from app.schemas.goal import GoalSchema, GoalCreate, GoalUpdate, GoalUpdateAmoun
 from app.api.deps import get_current_user, CurrentUser, SessionDep
 from app import crud
 
+router = APIRouter()
+
 NOT_FOUND_MESSAGE = "Цель не найдена"
 
-router = APIRouter()
+
+@router.get("/{id}", response_model=GoalSchema)
+def get_goal(*, session: SessionDep, current_user: CurrentUser, id: int):
+    """
+    **Получает информацию о цели по её ID.**
+
+    Args:
+        session (SessionDep): Сессия базы данных.
+        current_user (CurrentUser): Текущий авторизованный пользователь.
+        id (int): Идентификатор цели.
+
+    Returns:
+        GoalSchema: Информация о цели.
+
+    Raises:
+        HTTPException: Если цель не найдена или если пользователь пытается получить цель не своего пользователя.
+    """
+    goal = crud.goal.get(session, id)
+
+    if not goal:
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
+
+    if goal.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    return goal
 
 
 @router.get("/", response_model=List[GoalSchema])

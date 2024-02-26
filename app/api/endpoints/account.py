@@ -9,6 +9,35 @@ from app import crud
 
 router = APIRouter()
 
+NOT_FOUND_MESSAGE = "Счёт не найден"
+
+
+@router.get("/{id}", response_model=AccountSchema)
+def get_account(*, session: SessionDep, current_user: CurrentUser, id: int):
+    """
+    **Получает информацию о счёте по его id.**
+
+    Args:
+        session (SessionDep): Сессия базы данных.
+        current_user (CurrentUser): Текущий авторизованный пользователь.
+        id (int): Идентификатор счёта.
+
+    Returns:
+        List[AccountSchema]: Информация о счёте.
+
+    Raises:
+        HTTPException: Если счёт не найден или если пользователь пытается получить счёт не своего пользователя.
+    """
+    account = crud.account.get(session, id)
+
+    if not account:
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
+
+    if account.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    return account
+
 
 @router.get("/", response_model=List[AccountSchema])
 def get_accounts(*, session: SessionDep, current_user: CurrentUser):
@@ -69,7 +98,7 @@ def update_account(
     """
     account = crud.account.get(session, account_id)
     if not account:
-        raise HTTPException(status_code=404, detail="Счёт не найден")
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
     if account.user_id != current_user.id:
         raise HTTPException(
             status_code=400, detail="Пользователь не может изменить не свой счёт"
@@ -102,7 +131,7 @@ def delete_account(
     """
     account = crud.account.get(session, account_id)
     if not account:
-        raise HTTPException(status_code=404, detail="Счёт не найден")
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
     if account.user_id != current_user.id:
         raise HTTPException(
             status_code=400, detail="Пользователь не может удалить не свой счёт"

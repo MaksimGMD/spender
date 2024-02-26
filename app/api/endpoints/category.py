@@ -8,6 +8,35 @@ from app import crud
 
 router = APIRouter()
 
+NOT_FOUND_MESSAGE = "Категория не найдена"
+
+
+@router.get("/{id}", response_model=CategorySchema)
+def get_category(*, session: SessionDep, current_user: CurrentUser, id: int):
+    """
+    **Получает информацию о категории по её id.**
+
+    Args:
+        session (SessionDep): Сессия базы данных.
+        current_user (CurrentUser): Текущий авторизованный пользователь.
+        id (int): Идентификатор категории.
+
+    Returns:
+        CategorySchema: Информация о категории.
+
+    Raises:
+        HTTPException: Если категория не найдена или если пользователь пытается получить категорию не своего пользователя.
+    """
+    category = crud.category.get(session, id)
+
+    if not category:
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
+
+    if category.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    return category
+
 
 @router.get("/", response_model=List[CategorySchema])
 def get_categories(*, session: SessionDep, current_user: CurrentUser):
@@ -70,7 +99,7 @@ def update_category(
     """
     category = crud.category.get(session, category_id)
     if not category:
-        raise HTTPException(status_code=404, detail="Категория не найдена")
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
     if category.user_id != current_user.id:
         raise HTTPException(
             status_code=400, detail="Пользователь не может изменить не свою категорию"
@@ -103,7 +132,7 @@ def delete_category(
     """
     category = crud.category.get(session, category_id)
     if not category:
-        raise HTTPException(status_code=404, detail="Категория не найдена")
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
     if category.user_id != current_user.id:
         raise HTTPException(
             status_code=400, detail="Пользователь не может удалить не свою категорию"
