@@ -25,3 +25,8 @@ class TransactionSchema(TransactionBase):
 
     class Config:
         from_attributes = True
+
+
+class TransactionsOut(TransactionSchema):
+    account_name: str
+    category_name: str

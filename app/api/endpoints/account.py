@@ -1,7 +1,9 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select, Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
 from app.models.account import Account
 from app.schemas.account import AccountSchema, AccountCreate, AccountUpdate
 from app.api.deps import get_current_user, get_session, CurrentUser
@@ -22,9 +24,10 @@ def get_accounts(*, session: Session = Depends(get_session), current_user: Curre
     Returns:
         List[AccountSchema]: Список счетов пользователя.
     """
-    accounts = session.exec(
-        select(Account).where(Account.user_id == current_user.id)
-    ).all()
+    # accounts = session.execute(
+    #     select(Account).where(Account.user_id == current_user.id)
+    # ).all()
+    accounts = session.query(Account).filter(Account.user_id == current_user.id).all()
     return accounts
 
 

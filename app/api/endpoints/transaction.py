@@ -1,34 +1,94 @@
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select, Session
-from app.models.transaction import Transaction
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.schemas.transaction import (
     TransactionSchema,
     TransactionCreate,
     TransactionUpdate,
+    TransactionsOut,
 )
-from app.api.deps import get_current_user, get_session, CurrentUser
+from app.api.deps import SessionDep, get_current_user, CurrentUser
 from app import crud
 
 router = APIRouter()
 
+NOT_FOUND_MESSAGE = "Транзакция не найдена"
 
-@router.get("/", response_model=List[TransactionSchema])
-def get_transactions(
-    *, session: Session = Depends(get_session), current_user: CurrentUser
+
+@router.get(
+    "/{id}",
+    dependencies=[Depends(get_current_user)],
+    response_model=Optional[TransactionSchema],
+)
+def get_transaction(*, session: SessionDep, id: int, current_user: CurrentUser):
+    """
+    **Получает информацию о транзакции по её id.**
+
+    Args:
+        session (Session, optional): Сессия базы данных. Defaults to Depends(get_session).
+        id (int): Идентификатор транзакции.
+        current_user (CurrentUser): Текущий авторизованный пользователь.
+
+    Returns:
+        Optional[TransactionSchema]: Информация о транзакции.
+
+    Raises:
+        HTTPException: Если транзакция не найдена или если пользователь пытается получить транзакцию не своего счёта.
+    """
+    transaction = crud.transaction.get(session, id)
+
+    if not transaction:
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
+
+    if transaction.account.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    return transaction
+
+
+@router.get(
+    "/account_transactions/{account_id}",
+    dependencies=[Depends(get_current_user)],
+    response_model=List[TransactionsOut],
+)
+def get_account_transactions(
+    *,
+    session: SessionDep,
+    account_id: int,
+    begin_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    transaction_type: Optional[str] = Query(
+        None,
+        description="Фильтрует транзакции по типу: 'income' - доходы или 'expense' - расходы",
+    ),
 ):
+    """
+    **Получает список транзакций для указанного счёта с возможностью фильтрации.**
 
-    transactions = session.exec(select(Transaction)).all()
-    return transactions
+    Args:
+        session (Session, optional): Сессия базы данных. Defaults to Depends(get_session).
+        account_id (int): Идентификатор счёта.
+        begin_date (Optional[datetime], optional): Начальная дата фильтрации. Defaults to None.
+        end_date (Optional[datetime], optional): Конечная дата фильтрации. Defaults to None.
+        transaction_type (Optional[str], optional): Тип транзакции для фильтрации: 'income' - доходы, 'expense' - расходы. Defaults to None.
+
+    Returns:
+        List[TransactionsOut]: Список транзакций.
+
+    Raises:
+        HTTPException: Если произошла ошибка при получении транзакций.
+    """
+    return crud.transaction.get_filtered_transactions(
+        session, account_id, begin_date, end_date, transaction_type
+    )
 
 
 @router.post(
     "/", dependencies=[Depends(get_current_user)], response_model=TransactionSchema
 )
-def create_transaction(
-    *, session: Session = Depends(get_session), transaction_in: TransactionCreate
-):
+def create_transaction(*, session: SessionDep, transaction_in: TransactionCreate):
     """
     **Создает новую транзакцию для текущего пользователя.
     Если amount положительная - доход. Если amount отрицательная - расход**
@@ -56,19 +116,32 @@ def create_transaction(
 @router.put("/{transaction_id}", response_model=TransactionSchema)
 def update_transaction(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     transaction_id: int,
     transaction_in: TransactionUpdate,
 ):
+    """
+    **Обновляет существующую транзакцию пользователя.**
+
+    Args:
+        session (Session, optional): Сессия базы данных. Defaults to Depends(get_session).
+        current_user (CurrentUser): Текущий авторизованный пользователь.
+        transaction_id (int): Идентификатор транзакции.
+        transaction_in (TransactionUpdate): Данные для обновления транзакции.
+
+    Returns:
+        TransactionSchema: Обновлённая транзакция.
+
+    Raises:
+        HTTPException: Если транзакция не найдена, пользователь не может изменить транзакцию не своего счёта,
+        или произошла ошибка при обновлении транзакции.
+    """
     transaction = crud.transaction.get(session, transaction_id)
     if not transaction:
-        raise HTTPException(status_code=404, detail="Транзакция не найдена")
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
 
-    user_id = crud.transaction.get_user_id_by_account(
-        db=session, account_id=transaction.account_id
-    )
-    if user_id != current_user.id:
+    if transaction.account.user_id != current_user.id:
         raise HTTPException(
             status_code=400,
             detail="Пользователь не может изменить транзакцию не своего счёта",
@@ -89,18 +162,30 @@ def update_transaction(
 @router.delete("/{transaction_id}")
 def delete_transaction(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     transaction_id: int,
 ):
+    """
+    **Удаляет транзакцию пользователя.**
+
+    Args:
+        session (Session, optional): Сессия базы данных. Defaults to Depends(get_session).
+        current_user (CurrentUser): Текущий авторизованный пользователь.
+        transaction_id (int): Идентификатор транзакции.
+
+    Returns:
+        str: Сообщение об успешном удалении транзакции.
+
+    Raises:
+        HTTPException: Если транзакция не найдена, пользователь не может удалить транзакцию не своего счёта,
+        или произошла ошибка при удалении транзакции.
+    """
     transaction = crud.transaction.get(session, transaction_id)
     if not transaction:
-        raise HTTPException(status_code=404, detail="Транзакция не найдена")
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
 
-    user_id = crud.transaction.get_user_id_by_account(
-        db=session, account_id=transaction.account_id
-    )
-    if user_id != current_user.id:
+    if transaction.account.user_id != current_user.id:
         raise HTTPException(
             status_code=400,
             detail="Пользователь не может удалить транзакцию не своего счёта",

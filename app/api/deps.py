@@ -4,11 +4,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
-from sqlmodel import Session
+from sqlalchemy.orm import Session
 
 from app.core import security
 from app.core.config import settings
-from app.db.database import engine
+from app.db.database import engine, SessionLocal
 from app.models import User
 from app.schemas.token import TokenPayload
 
@@ -16,15 +16,18 @@ reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="auth/access-token")
 
 
 def get_session() -> Generator:
-    with Session(engine) as session:
-        try:
-            yield session
-        finally:
-            session.close()
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+    
+SessionDep = Annotated[Session, Depends(get_session)]
+TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 
 def get_current_user(
-    session: Session = Depends(get_session), token: str = Depends(reusable_oauth2)
+    session: SessionDep, token: TokenDep
 ) -> User:
     """
     Получает текущего пользователя на основе переданного токена аутентификации.

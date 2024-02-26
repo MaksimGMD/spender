@@ -1,6 +1,5 @@
-from sqlalchemy import func
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
-from sqlmodel import select
 from fastapi import Depends
 
 from app.models.user import User
@@ -20,9 +19,9 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
     Returns:
         User | None: Возвращает экземпляр пользователя если найден, в противном случае None.
     """
-    statement = select(User).where(func.lower(User.email) == func.lower(email))
-    session_user = session.exec(statement).first()
-    return session_user
+    return (
+        session.query(User).filter(func.lower(User.email) == func.lower(email)).first()
+    )
 
 
 def authenticate(
