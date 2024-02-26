@@ -6,7 +6,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    # SECRET_KEY: str = secrets.token_urlsafe(32)
+    SECRET_KEY: str = "TEST_SECRET_DO_NOT_USE_IN_PROD"
     # истекает через 7 дней
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
