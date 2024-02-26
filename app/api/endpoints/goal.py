@@ -1,10 +1,10 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select, Session
+
 from app.models.goal import Goal
 from app.schemas.goal import GoalSchema, GoalCreate, GoalUpdate, GoalUpdateAmount
-from app.api.deps import get_current_user, get_session, CurrentUser
+from app.api.deps import get_current_user, CurrentUser, SessionDep
 from app import crud
 
 NOT_FOUND_MESSAGE = "Цель не найдена"
@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[GoalSchema])
-def get_goals(*, session: Session = Depends(get_session), current_user: CurrentUser):
+def get_goals(*, session: SessionDep, current_user: CurrentUser):
     """
     **Получает список категорий для текущего пользователя.**
 
@@ -24,12 +24,12 @@ def get_goals(*, session: Session = Depends(get_session), current_user: CurrentU
     Returns:
         List[GoalSchema]: Список целей пользователя.
     """
-    goals = session.exec(select(Goal).where(Goal.user_id == current_user.id)).all()
+    goals = session.query(Goal).where(Goal.user_id == current_user.id).all()
     return goals
 
 
 @router.post("/", dependencies=[Depends(get_current_user)], response_model=GoalSchema)
-def create_goal(*, session: Session = Depends(get_session), goal_in: GoalCreate):
+def create_goal(*, session: SessionDep, goal_in: GoalCreate):
     """
     **Создает новую цель для текущего пользователя.**
 
@@ -47,7 +47,7 @@ def create_goal(*, session: Session = Depends(get_session), goal_in: GoalCreate)
 @router.put("/{goal_id}", response_model=GoalSchema)
 def update_goal(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     goal_id: int,
     goal_in: GoalUpdate,
@@ -82,7 +82,7 @@ def update_goal(
 @router.put("/add_accumulated_amount/{goal_id}", response_model=GoalSchema)
 def add_accumulated_amount(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     goal_id: int,
     goal_in: GoalUpdateAmount,
@@ -119,7 +119,7 @@ def add_accumulated_amount(
 @router.delete("/{goal_id}")
 def delete_goal(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     goal_id: int,
 ):

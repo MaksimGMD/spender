@@ -1,19 +1,17 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.models.account import Account
 from app.schemas.account import AccountSchema, AccountCreate, AccountUpdate
-from app.api.deps import get_current_user, get_session, CurrentUser
+from app.api.deps import SessionDep, get_current_user, CurrentUser
 from app import crud
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[AccountSchema])
-def get_accounts(*, session: Session = Depends(get_session), current_user: CurrentUser):
+def get_accounts(*, session: SessionDep, current_user: CurrentUser):
     """
     **Получает список счетов для текущего пользователя.**
 
@@ -24,9 +22,6 @@ def get_accounts(*, session: Session = Depends(get_session), current_user: Curre
     Returns:
         List[AccountSchema]: Список счетов пользователя.
     """
-    # accounts = session.execute(
-    #     select(Account).where(Account.user_id == current_user.id)
-    # ).all()
     accounts = session.query(Account).filter(Account.user_id == current_user.id).all()
     return accounts
 
@@ -34,9 +29,7 @@ def get_accounts(*, session: Session = Depends(get_session), current_user: Curre
 @router.post(
     "/", dependencies=[Depends(get_current_user)], response_model=AccountSchema
 )
-def create_account(
-    *, session: Session = Depends(get_session), account_in: AccountCreate
-):
+def create_account(*, session: SessionDep, account_in: AccountCreate):
     """
     **Создает новый счет для текущего пользователя.**
 
@@ -54,7 +47,7 @@ def create_account(
 @router.put("/{account_id}", response_model=AccountSchema)
 def update_account(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     account_id: int,
     account_in: AccountUpdate,
@@ -89,7 +82,7 @@ def update_account(
 @router.delete("/{account_id}")
 def delete_account(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     account_id: int,
 ):

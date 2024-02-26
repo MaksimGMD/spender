@@ -1,11 +1,10 @@
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core.config import settings
-from app.api.deps import get_session, CurrentUser
+from app.api.deps import CurrentUser, SessionDep
 from app.core.security import create_access_token
 from app.crud.auth import authenticate
 from app.schemas.token import Token, OAuth2PasswordRequestForm
@@ -17,7 +16,7 @@ router = APIRouter()
 
 @router.post("/login", response_model=Token)
 def login(
-    session: Session = Depends(get_session),
+    session: SessionDep,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     """
@@ -50,7 +49,7 @@ def login(
 
 @router.post("/access-token")
 def login_access_token(
-    session: Session = Depends(get_session),
+    session: SessionDep,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Token:
     """

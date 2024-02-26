@@ -1,10 +1,9 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select, Session
 
 from app import crud
-from app.api.deps import get_current_user, get_session, CurrentUser
+from app.api.deps import get_current_user, CurrentUser, SessionDep
 from app.schemas.user import UserCreate, UserSchema, UserUpdate
 from app.models.user import User
 
@@ -14,7 +13,7 @@ router = APIRouter()
 @router.get(
     "/", dependencies=[Depends(get_current_user)], response_model=List[UserSchema]
 )
-def get_users(session: Session = Depends(get_session)):
+def get_users(session: SessionDep):
     """
     **Получение списка пользователей.**
 
@@ -24,12 +23,12 @@ def get_users(session: Session = Depends(get_session)):
     Returns:
         List[UserSchema]: Список объектов с данными пользователей.
     """
-    users = session.exec(select(User)).all()
+    users = session.query(User).all()
     return users
 
 
 @router.post("/", response_model=UserSchema)
-def create_user(*, session: Session = Depends(get_session), user_in: UserCreate):
+def create_user(*, session: SessionDep, user_in: UserCreate):
     """
     **Создание нового пользователя.**
 
@@ -57,7 +56,7 @@ def create_user(*, session: Session = Depends(get_session), user_in: UserCreate)
 @router.put("/{user_id}", response_model=UserSchema)
 def update_user(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     user_id: int,
     user_in: UserUpdate,
@@ -95,9 +94,7 @@ def update_user(
 
 
 @router.delete("/{user_id}")
-def delete_user(
-    *, session: Session = Depends(get_session), current_user: CurrentUser, user_id: int
-):
+def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id: int):
     """
     **Удаление пользователя.**
 

@@ -1,19 +1,16 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select, Session
 from app.models.category import Category
 from app.schemas.category import CategorySchema, CategoryCreate, CategoryUpdate
-from app.api.deps import get_current_user, get_session, CurrentUser
+from app.api.deps import get_current_user, CurrentUser, SessionDep
 from app import crud
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[CategorySchema])
-def get_categories(
-    *, session: Session = Depends(get_session), current_user: CurrentUser
-):
+def get_categories(*, session: SessionDep, current_user: CurrentUser):
     """
     **Получает список категорий для текущего пользователя.**
 
@@ -24,18 +21,16 @@ def get_categories(
     Returns:
         List[CategorySchema]: Список категорий пользователя.
     """
-    categories = session.exec(
-        select(Category).where(Category.user_id == current_user.id)
-    ).all()
+    categories = (
+        session.query(Category).where(Category.user_id == current_user.id).all()
+    )
     return categories
 
 
 @router.post(
     "/", dependencies=[Depends(get_current_user)], response_model=CategorySchema
 )
-def create_category(
-    *, session: Session = Depends(get_session), category_in: CategoryCreate
-):
+def create_category(*, session: SessionDep, category_in: CategoryCreate):
     """
     **Создает новую категорию для текущего пользователя.**
 
@@ -53,7 +48,7 @@ def create_category(
 @router.put("/{category_id}", response_model=CategorySchema)
 def update_category(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     category_id: int,
     category_in: CategoryUpdate,
@@ -88,7 +83,7 @@ def update_category(
 @router.delete("/{category_id}")
 def delete_category(
     *,
-    session: Session = Depends(get_session),
+    session: SessionDep,
     current_user: CurrentUser,
     category_id: int,
 ):
