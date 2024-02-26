@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import (
     BigInteger,
     String,
@@ -8,7 +10,6 @@ from sqlalchemy import (
     Boolean,
 )
 from sqlalchemy.orm import relationship
-from datetime import datetime
 
 from app.models.base import Base
 

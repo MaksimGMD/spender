@@ -25,6 +25,11 @@ class AccountCreate(AccountBase):
     user_id: int
 
 
+class AccountUpdateBalance(BaseModel):
+    id: int
+    amount: condecimal(max_digits=10, decimal_places=2)
+
+
 class AccountUpdate(AccountBase):
     pass
 

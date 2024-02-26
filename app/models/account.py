@@ -17,3 +17,7 @@ class Account(Base):
         BigInteger, ForeignKey("user.id", ondelete="CASCADE"), nullable=False
     )
     user = relationship("User", back_populates="accounts")
+
+    transactions = relationship(
+        "Transaction", back_populates="account", cascade="all,delete", uselist=True
+    )
