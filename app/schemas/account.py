@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 
 from pydantic import BaseModel, condecimal
+
+from app.schemas.transaction import TransactionBase
 
 
 class CurrencyEnum(str, Enum):
@@ -38,5 +40,11 @@ class AccountSchema(AccountBase):
     id: int
     user_id: int
 
+    class Config:
+        from_attributes = True
+        
+class AccountTransactions(AccountSchema):
+    transactions: Optional[List[TransactionBase]]
+    
     class Config:
         from_attributes = True

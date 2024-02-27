@@ -1,9 +1,16 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from app.models.account import Account
-from app.schemas.account import AccountSchema, AccountCreate, AccountUpdate
+from app.schemas.account import (
+    AccountSchema,
+    AccountCreate,
+    AccountUpdate,
+    AccountTransactions,
+)
 from app.api.deps import SessionDep, get_current_user, CurrentUser
 from app import crud
 
@@ -53,6 +60,47 @@ def get_accounts(*, session: SessionDep, current_user: CurrentUser):
     """
     accounts = session.query(Account).filter(Account.user_id == current_user.id).all()
     return accounts
+
+
+@router.get(
+    "/get_account_transactions/{account_id}", response_model=List[AccountTransactions]
+)
+def get_account_with_transactions(
+    account_id: int,
+    current_user: CurrentUser,
+    session: SessionDep,
+):
+    """
+    **Получает данные о счёте пользователя вместе с его транзакциями.**
+
+    Args:
+        account_id (int): Идентификатор аккаунта.
+        current_user (CurrentUser): Авторизованный пользователь.
+        session (SessionDep): Сессия базы данных.
+
+    Returns:
+        List[AccountTransactions]: Список аккаунтов с их транзакциями.
+
+    Raises:
+        HTTPException: Если аккаунт не найден, не принадлежит текущему пользователю
+        или если запрос к базе данных завершился ошибкой.
+    """
+    account = (
+        session.query(Account)
+        .where(Account.id == account_id, Account.user_id == current_user.id)
+        .first()
+    )
+    if not account:
+        raise HTTPException(status_code=404, detail=NOT_FOUND_MESSAGE)
+
+    statement = (
+        select(Account)
+        .options(joinedload(Account.transactions))
+        .where(Account.id == account_id, Account.user_id == current_user.id)
+        .order_by(Account.id)
+    )
+    transactions = session.execute(statement).unique().scalars().all()
+    return transactions
 
 
 @router.post(
