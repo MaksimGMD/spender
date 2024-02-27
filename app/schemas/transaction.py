@@ -30,3 +30,8 @@ class TransactionSchema(TransactionBase):
 class TransactionsOut(TransactionSchema):
     account_name: str
     category_name: str
+    
+class TransactionTransferCreate(TransactionBase):
+    account_id: int
+    to_account_id: int
+    category_id: Optional[int] = None

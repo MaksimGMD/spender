@@ -1,5 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
+from copy import deepcopy
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -8,7 +9,9 @@ from app.schemas.transaction import (
     TransactionCreate,
     TransactionUpdate,
     TransactionsOut,
+    TransactionTransferCreate,
 )
+from app.schemas.category import CategoryCreate
 from app.api.deps import SessionDep, get_current_user, CurrentUser
 from app import crud
 
@@ -92,7 +95,6 @@ def create_transaction(*, session: SessionDep, transaction_in: TransactionCreate
     """
     **Создает новую транзакцию для текущего пользователя.
     Если amount положительная - доход. Если amount отрицательная - расход**
-
 
     Args:
         session (Session, optional): Сессия базы данных. Defaults to Depends(get_session).
@@ -194,6 +196,78 @@ def delete_transaction(
         crud.transaction.remove(session, id=transaction_id)
         crud.account.update_balance(session, transaction.account_id)
         return f"Транзакция на сумму: {transaction.amount}, выполненная: {transaction.date} удалена"
+    except HTTPException as e:
+        raise e from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Произошла ошибка: {e}") from e
+
+
+@router.post(
+    "/transfer_transaction",
+    response_model=str,
+)
+def create_transfer_transaction(
+    *,
+    session: SessionDep,
+    transaction_in: TransactionTransferCreate,
+    current_user: CurrentUser,
+):
+    """
+    **Создает новую транзакцию для перевода денег между счетами текущего пользователя.**
+
+    Args:
+        session (Session, optional): Сессия базы данных. Defaults to Depends(get_session).
+        transaction_in (TransactionCreate): Данные для создания новой транзакции.
+        current_user (CurrentUser): Текущий авторизованный пользователь.
+
+    Returns:
+        TransactionSchema: Созданная транзакция.
+
+    Raises:
+        HTTPException: В случае ошибки при создании транзакции.
+    """
+    # Получает данные о счетах
+    account_from = crud.account.get(session, transaction_in.account_id)
+    if not account_from:
+        raise HTTPException(status_code=404, detail="Счёт отправитель не найден")
+
+    account_to = crud.account.get(session, transaction_in.to_account_id)
+    if not account_to:
+        raise HTTPException(status_code=404, detail="Счёт получатель не найден")
+
+    if account_from.user_id != current_user.id or account_to.user_id != current_user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="Пользователь не может сделать перевод не для своих счетов",
+        )
+    # Проверяет наличие категории для перевода
+    translation_category = crud.category.get_by_name(session, "Перевод")
+    if not translation_category:
+        translation_category = crud.category.create(
+            db=session,
+            obj_in=CategoryCreate(name="Перевод", user_id=current_user.id),
+        )
+
+    # Добавялет идентификатор категории
+    transaction_in.category_id = translation_category.id
+    transaction_in_dump = transaction_in.model_dump()
+    # Убирает не валидное поле
+    transaction_in_dump.pop("to_account_id")
+
+    # Создаёт транзакцию для счёта отправителя
+    crud.transaction.create(db=session, obj_in=transaction_in_dump)
+
+    to_transaction_in = transaction_in.model_copy(deep=True)
+    to_transaction_in.amount = -transaction_in.amount
+    to_transaction_in.account_id = transaction_in.to_account_id
+    to_transaction_in_dump = transaction_in.model_dump()
+    to_transaction_in_dump.pop("to_account_id")
+    try:
+
+        # Создаёт транзакцию для счёта получателя
+        crud.transaction.create(db=session, obj_in=to_transaction_in_dump)
+
+        return f"Перевод на сумму {transaction_in.amount}, {account_from.name} --> {account_to.name}, прошёл успешно"
     except HTTPException as e:
         raise e from e
     except Exception as e:
