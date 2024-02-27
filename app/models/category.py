@@ -19,3 +19,7 @@ class Category(Base):
     transactions = relationship(
         "Transaction", back_populates="category", cascade="all,delete", uselist=True
     )
+
+    budgets = relationship(
+        "Budget", back_populates="category", cascade="all,delete", uselist=True
+    )

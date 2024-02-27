@@ -22,3 +22,6 @@ class User(Base):
     accounts = relationship(
         "Account", back_populates="user", cascade="all,delete", uselist=True
     )
+    budgets = relationship(
+        "Budget", back_populates="user", cascade="all,delete", uselist=True
+    )
