@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, condecimal
+from enum import Enum
 
 
 class BudgetPeriod(str, Enum):
@@ -19,7 +20,7 @@ class BudgetBase(BaseModel):
 
 class BudgetCreate(BudgetBase):
     user_id: int
-    category_id: int
+    category_id: Optional[int] = None
 
 
 class BudgetUpdate(BudgetBase):
@@ -29,7 +30,7 @@ class BudgetUpdate(BudgetBase):
 class BudgetSchema(BudgetBase):
     id: int
     user_id: int
-    category_id: int
+    category_id: Optional[int]
 
     class Config:
         from_attributes = True

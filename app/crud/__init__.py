@@ -4,3 +4,4 @@ from .crud_category import category
 from .crud_goal import goal
 from .crud_account import account
 from .crud_transaction import transaction
+from .crud_budget import budget
