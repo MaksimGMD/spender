@@ -72,5 +72,5 @@ def delete_budget(
             status_code=400, detail="Пользователь не может удалить не свой бюджет"
         )
 
-    crud.goal.remove(session, id=budget_id)
+    crud.budget.remove(session, id=budget_id)
     return "Бюджет удален"
