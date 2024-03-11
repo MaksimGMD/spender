@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import Column, BigInteger, Numeric, String, DateTime, ForeignKey
+from sqlalchemy import (
+    Column,
+    BigInteger,
+    Numeric,
+    String,
+    DateTime,
+    ForeignKey,
+    Integer,
+)
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
@@ -8,7 +16,11 @@ from app.models.base import Base
 
 # Модель бюджета
 class Budget(Base):
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     amount = Column(Numeric(precision=10, scale=2), nullable=False)
     period = Column(
         String, nullable=False, default="week"

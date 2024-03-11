@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.models.goal import Goal
 from app.schemas.goal import GoalSchema, GoalCreate, GoalUpdate, GoalUpdateAmount
-from app.api.deps import get_current_user, CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep
 from app import crud
 
 router = APIRouter()
@@ -55,8 +55,8 @@ def get_goals(*, session: SessionDep, current_user: CurrentUser):
     return goals
 
 
-@router.post("/", dependencies=[Depends(get_current_user)], response_model=GoalSchema)
-def create_goal(*, session: SessionDep, goal_in: GoalCreate):
+@router.post("/", response_model=GoalSchema)
+def create_goal(*, session: SessionDep, goal_in: GoalCreate, current_user: CurrentUser):
     """
     **Создает новую цель для текущего пользователя.**
 
@@ -67,7 +67,7 @@ def create_goal(*, session: SessionDep, goal_in: GoalCreate):
     Returns:
         GoalSchema: Созданная цель.
     """
-    goal = crud.goal.create(db=session, obj_in=goal_in)
+    goal = crud.goal.create(db=session, obj_in=goal_in, user_id=current_user.id)
     return goal
 
 

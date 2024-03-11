@@ -57,9 +57,11 @@ def get_categories(*, session: SessionDep, current_user: CurrentUser):
 
 
 @router.post(
-    "/", dependencies=[Depends(get_current_user)], response_model=CategorySchema
+    "/", response_model=CategorySchema
 )
-def create_category(*, session: SessionDep, category_in: CategoryCreate):
+def create_category(
+    *, session: SessionDep, category_in: CategoryCreate, current_user: CurrentUser
+):
     """
     **Создает новую категорию для текущего пользователя.**
 
@@ -70,8 +72,8 @@ def create_category(*, session: SessionDep, category_in: CategoryCreate):
     Returns:
         CategorySchema: Созданная категория.
     """
-    user = crud.category.create(db=session, obj_in=category_in)
-    return user
+    category = crud.category.create(db=session, obj_in=category_in, user_id=current_user.id)
+    return category
 
 
 @router.put("/{category_id}", response_model=CategorySchema)

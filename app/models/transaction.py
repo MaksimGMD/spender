@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, String, Column, ForeignKey, Numeric, DateTime
+from sqlalchemy import (
+    BigInteger,
+    String,
+    Column,
+    ForeignKey,
+    Numeric,
+    DateTime,
+    Integer,
+)
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
@@ -8,7 +16,11 @@ from app.models.base import Base
 
 # Модель транзакции пользователя
 class Transaction(Base):
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     amount = Column(Numeric(precision=10, scale=2), nullable=False)
     date = Column(DateTime, index=True, nullable=False, default=datetime.utcnow)
     description = Column(String, nullable=True)
@@ -17,7 +29,7 @@ class Transaction(Base):
         BigInteger, ForeignKey("category.id", ondelete="CASCADE"), nullable=False
     )
     category = relationship("Category", back_populates="transactions")
-    
+
     account_id = Column(
         BigInteger, ForeignKey("account.id", ondelete="CASCADE"), nullable=False
     )

@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, Column
+from sqlalchemy import BigInteger, String, Column, Integer
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
@@ -6,7 +6,11 @@ from app.models.base import Base
 
 # Модель пользователя
 class User(Base):
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     name = Column(String, index=True, nullable=False)
     email = Column(String, index=True, nullable=False, unique=True)
     hashed_password = Column(String, nullable=False)

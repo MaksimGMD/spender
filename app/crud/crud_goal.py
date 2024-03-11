@@ -1,4 +1,4 @@
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, Optional
 
 from sqlalchemy.orm import Session
 
@@ -8,8 +8,8 @@ from app.schemas.goal import GoalCreate, GoalUpdate, GoalUpdateAmount
 
 
 class CRUDGoal(CRUDBase[Goal, GoalCreate, GoalUpdate]):
-    def create(self, db: Session, *, obj_in: GoalCreate):
-        goal = super().create(db, obj_in=obj_in)
+    def create(self, db: Session, *, obj_in: GoalCreate, user_id: Optional[int] = None):
+        goal = super().create(db, obj_in=obj_in, user_id=user_id)
         new_goal = self._update_is_achieved(db, goal.id)
         return new_goal
 

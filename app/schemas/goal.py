@@ -11,7 +11,7 @@ class GoalBase(BaseModel):
 
 
 class GoalCreate(GoalBase):
-    user_id: int
+    pass
 
 
 class GoalUpdate(GoalBase):

@@ -42,8 +42,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
         return db.query(self.model).filter(self.model.id == id).first()
 
-    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
+    def create(
+        self, db: Session, *, obj_in: CreateSchemaType, user_id: Optional[int] = None
+    ) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
+        if user_id:
+            obj_in_data["user_id"] = user_id
         db_obj = self.model(**obj_in_data)  # type: ignore
         db.add(db_obj)
         db.commit()

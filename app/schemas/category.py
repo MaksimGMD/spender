@@ -8,7 +8,7 @@ class CategoryBase(BaseModel):
     icon_name: Optional[str] = None
     
 class CategoryCreate(CategoryBase):
-    user_id: int
+    pass
     
 class CategoryUpdate(CategoryBase):
     pass

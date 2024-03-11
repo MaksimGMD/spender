@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     Numeric,
     Boolean,
+    Integer,
 )
 from sqlalchemy.orm import relationship
 
@@ -16,7 +17,11 @@ from app.models.base import Base
 
 # Модель целей
 class Goal(Base):
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     name = Column(String, index=True, nullable=False)
     target_amount = Column(Numeric(precision=10, scale=2), nullable=False)
     amount = Column(Numeric(precision=10, scale=2), nullable=False, default=0.0)
