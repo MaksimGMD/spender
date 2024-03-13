@@ -40,7 +40,6 @@
  - POST `transaction/transfer_transaction/` - Создает новую транзакцию для перевода денег между счетами текущего пользователя.
  - PUT `transaction/{transaction_id}`- Обновляет существующую транзакцию пользователя.
  - DELETE `transaction/{transaction_id}` - Удаляет транзакцию пользователя.
- - 
 ### Category
  - GET `category/{id}` - Получает информацию о категории по её id.
  - GET`category/` - Получает список категорий для текущего пользователя.
