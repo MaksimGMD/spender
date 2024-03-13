@@ -104,9 +104,9 @@ def get_account_with_transactions(
 
 
 @router.post(
-    "/", dependencies=[Depends(get_current_user)], response_model=AccountSchema
+    "/", response_model=AccountSchema
 )
-def create_account(*, session: SessionDep, account_in: AccountCreate):
+def create_account(*, session: SessionDep, account_in: AccountCreate, current_user: CurrentUser):
     """
     **Создает новый счет для текущего пользователя.**
 
@@ -117,8 +117,8 @@ def create_account(*, session: SessionDep, account_in: AccountCreate):
     Returns:
         AccountSchema: Созданный счет.
     """
-    user = crud.account.create(db=session, obj_in=account_in)
-    return user
+    account = crud.account.create(db=session, obj_in=account_in, user_id=current_user.id)
+    return account
 
 
 @router.put("/{account_id}", response_model=AccountSchema)

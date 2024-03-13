@@ -31,9 +31,9 @@ def get_budgets(*, session: SessionDep, current_user: CurrentUser):
     return budgets
 
 
-@router.post("/", dependencies=[Depends(get_current_user)], response_model=BudgetSchema)
-def create_budget(*, session: SessionDep, budget_in: BudgetCreate):
-    budget = crud.budget.create(db=session, obj_in=budget_in)
+@router.post("/", response_model=BudgetSchema)
+def create_budget(*, session: SessionDep, budget_in: BudgetCreate, current_user: CurrentUser):
+    budget = crud.budget.create(db=session, obj_in=budget_in, user_id=current_user.id)
     return budget
 
 
