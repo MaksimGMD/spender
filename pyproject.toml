@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "spender"
+version = "0.1.0"
+description = ""
+authors = ["maxgmd404@gmail.com"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11.5"
+fastapi = "^0.109.2"
+sqlalchemy = "^2.0.25"
+alembic = "^1.13.1"
+psycopg2 = "^2.9.9"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+pydantic = {extras = ["email"], version = "^2.6.3"}
+email-validator = "^2.1.0.post1"
+uvicorn = {extras = ["standard"], version = "^0.27.1"}
+sqlmodel = "^0.0.16"
+pydantic-settings = "^2.2.1"
+python-multipart = "^0.0.9"
+pytest = "^8.0.2"
+faker = "^24.0.0"
+httpx = "^0.27.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
